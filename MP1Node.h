@@ -20,6 +20,8 @@
  */
 #define TREMOVE 20
 #define TFAIL 5
+#define SENDRATIO 0.2
+#define SENDTHRESHOLD 4
 
 /*
  * Note: You can change/add any functions in MP1Node.{h,cpp}
@@ -31,7 +33,7 @@
 enum MsgTypes{
     JOINREQ,
     JOINREP,
-    DUMMYLASTMSGTYPE
+    GOSSIP
 };
 
 /**
@@ -42,6 +44,17 @@ enum MsgTypes{
 typedef struct MessageHdr {
 	enum MsgTypes msgType;
 }MessageHdr;
+
+
+class ProtocolMessage {
+private:
+    char* message;
+    size_t messageSize;
+public:
+    ProtocolMessage(Member *sendingNode, vector<MemberListEntry> *membershipListToSend, MsgTypes messageType);
+    char* getSerializedMessage();
+    size_t getMessageSize();
+};
 
 /**
  * CLASS NAME: MP1Node
@@ -73,8 +86,16 @@ public:
 	void nodeLoopOps();
 	int isNullAddress(Address *addr);
 	Address getJoinAddress();
+    vector<MemberListEntry>* getAliveMemberList();
+    void sendMembershipList();
 	void initMemberListTable(Member *memberNode);
 	void printAddress(Address *addr);
+    static Address getAddress(int id, short port);
+    bool hasMember(int id, short port, long heartbeat);
+    bool addOrUpdateMember(int id, short port, long heartbeat);
+    bool isMemberExpired(MemberListEntry member);
+    int getId(Address *address);
+    short getPort(Address *address);
 	virtual ~MP1Node();
 };
 
