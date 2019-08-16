@@ -155,7 +155,35 @@ void MP2Node::clientRead(string key){
 	/*
 	 * Implement this
 	 */
+
+    vector<Node> replicas = findNodes(key);
+	for (int i =0; i < replicas.size(); i++) {
+		Message readMsg = constructMsg(MessageType::READ, key);
+		string data = readMsg.toString();
+		emulNet->ENsend(&memberNode->addr, replicas[i].getAddress(), data);
+	}
+	g_transID ++;
 }
+
+Message MP2Node::constructMsg(MessageType mType, string key, string value, bool success){
+	int trans_id = g_transID;
+
+    // Make the transaction and commit it
+    int timestamp = this->par->getcurrtime();
+    transaction* t = new transaction(trans_id, timestamp, mType, key, value);
+    this->transMap.emplace(trans_id, t);
+
+	if(mType == CREATE || mType == UPDATE){
+		Message msg(trans_id, this->memberNode->addr, mType, key, value);
+		return msg;
+	}else if(mType == READ || mType == DELETE){
+		Message msg(trans_id, this->memberNode->addr, mType, key);
+		return msg;
+	}else{
+		assert(1!=1); // for debug
+	}
+}
+
 
 /**
  * FUNCTION NAME: clientUpdate
