@@ -173,14 +173,15 @@ Message MP2Node::constructMsg(MessageType mType, string key, string value, bool 
     transaction* t = new transaction(trans_id, timestamp, mType, key, value);
     this->transMap.emplace(trans_id, t);
 
-	if(mType == CREATE || mType == UPDATE){
+	if(mType == CREATE || mType == UPDATE)
+    {
 		Message msg(trans_id, this->memberNode->addr, mType, key, value);
 		return msg;
-	}else if(mType == READ || mType == DELETE){
+	}
+    else if(mType == READ || mType == DELETE)
+    {
 		Message msg(trans_id, this->memberNode->addr, mType, key);
 		return msg;
-	}else{
-		assert(1!=1); // for debug
 	}
 }
 
@@ -198,6 +199,14 @@ void MP2Node::clientUpdate(string key, string value){
 	/*
 	 * Implement this
 	 */
+     vector<Node> replicas = findNodes(key);
+     for (int i =0; i < replicas.size(); i++)
+     {
+         Message updateMsg = constructMsg(MessageType::UPDATE, key, value);
+         string data = updateMsg.toString();
+         emulNet->ENsend(&memberNode->addr, replicas[i].getAddress(), data);
+     }
+     g_transID++;
 }
 
 /**
@@ -213,6 +222,15 @@ void MP2Node::clientDelete(string key){
 	/*
 	 * Implement this
 	 */
+     vector<Node> replicas = findNodes(key);
+     for (int i =0; i < replicas.size(); i++)
+     {
+         Message deleteMsg = constructMsg(MessageType::DELETE, key);
+         string data = deleteMsg.toString();
+         emulNet->ENsend(&memberNode->addr, replicas[i].getAddress(), data);
+     }
+     g_transID ++;
+
 }
 
 /**
