@@ -132,6 +132,14 @@ void MP2Node::clientCreate(string key, string value) {
 	/*
 	 * Implement this
 	 */
+    vector<Node> replicas = findNodes(key);
+	for (int i =0; i < replicas.size(); i++) {
+		Message createMsg = constructMsg(MessageType::CREATE, key, value);
+		string data = createMsg.toString();
+		emulNet->ENsend(&memberNode->addr, replicas[i].getAddress(), data);
+	}
+
+    g_transID++;
 }
 
 /**
