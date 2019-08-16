@@ -19,6 +19,8 @@
 #include "Message.h"
 #include "Queue.h"
 
+const int StabilizationTid = -1;
+
 /**
  * CLASS NAME: MP2Node
  *

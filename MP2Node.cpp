@@ -52,11 +52,32 @@ void MP2Node::updateRing() {
 	// Sort the list based on the hashCode
 	sort(curMemList.begin(), curMemList.end());
 
-
+    if (ring.size() != curMemList.size())
+    {
+        change = true;
+    }
+    else if (ring.size() != 0)
+    {
+        for (int i = 0; i < ring.size(); ++i)
+        {
+            if (curMemList[i].getHashCode() != ring[i].getHashCode())
+            {
+                change = true;
+                break;
+            }
+        }
+    }
 	/*
 	 * Step 3: Run the stabilization protocol IF REQUIRED
 	 */
+
 	// Run stabilization protocol if the hash table size is greater than zero and if there has been a changed in the ring
+
+    ring = curMemList;
+    if (change)
+    {
+        stabilizationProtocol();
+    }
 }
 
 /**
@@ -328,4 +349,19 @@ void MP2Node::stabilizationProtocol() {
 	/*
 	 * Implement this
 	 */
+
+     map<string, string>::iterator iter;
+     for (iter = ht->hashTable.begin(); iter != ht->hashTable.end(); ++iter)
+     {
+         string key = iter->first;
+         string value = iter->second;
+         vector<Node> replicas = findNodes(key);
+
+         for (int i = 0; i < replicas.size(); i++)
+         {
+             Message keyReplica(StabilizationTid, this->memberNode->addr, MessageType::CREATE, key, value);
+             string createData = keyReplica.toString();
+			 emulNet->ENsend(&memberNode->addr, replicas[i].getAddress(), createData);
+         }
+     }
 }
